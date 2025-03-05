@@ -1,18 +1,47 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../lib/firebase";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+    setError(null); // Reset error state
+
+    if (!email || !password || !confirmPassword) {
+      setError("All fields are required.");
       return;
     }
-    console.log("Signing up:", email, password); // Replace this with real auth logic
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log("Signed up as:", userCredential.user);
+      // Redirect to dashboard after successful sign-up
+      router.push("/dashboard");
+    } catch (error: any) {
+      if (error.code === "auth/email-already-in-use") {
+        setError("This email is already associated with another account.");
+      } else {
+        setError("Failed to create account. Please try again later.");
+      }
+    }
   };
 
   return (
@@ -56,6 +85,7 @@ export default function SignupPage() {
           >
             Sign Up
           </button>
+          {error && <p className="mt-4 text-red-500 text-sm">{error}</p>}
         </form>
         <p className="mt-4 text-center text-sm text-gray-400">
           Already have an account? <a href="/login" className="text-blue-400 hover:underline">Log in</a>

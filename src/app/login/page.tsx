@@ -1,13 +1,21 @@
 "use client";
 import { useState } from "react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../lib/firebase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Logging in:", email, password); // Replace with actual authentication logic
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("Logged in as:", userCredential.user);
+      // Redirect to dashboard after successful login
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
 
   return (
@@ -43,7 +51,7 @@ export default function LoginPage() {
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-400">
-          Don't have an account? <a href="/signup" className="text-blue-400 hover:underline">Sign up</a>
+          Don’t have an account? <a href="/signup" className="text-blue-400 hover:underline">Sign up</a>
         </p>
       </div>
     </main>
